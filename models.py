@@ -3,7 +3,7 @@ from starlette.websockets import WebSocket
 
 
 class UserConnection:
-    def __init__(self, socket: WebSocket, nickname: int):
+    def __init__(self, socket: WebSocket, nickname: str):
         self.socket = socket
         self.nickname = nickname
 
