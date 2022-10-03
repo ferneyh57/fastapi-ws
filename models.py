@@ -11,18 +11,18 @@ class UserConnection:
 class ConnectionManager:
 
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: List[UserConnection] = []
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
+    async def connect(self, new_connection: UserConnection):
+        await new_connection.socket.accept()
+        self.active_connections.append(new_connection)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    def disconnect(self, new_disconnection: UserConnection):
+        self.active_connections.remove(new_disconnection)
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_personal_message(self, message: str, reciber: UserConnection):
+        await reciber.socket.send_text(message)
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.socket.send_text(message)
