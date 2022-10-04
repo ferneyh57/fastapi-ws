@@ -1,14 +1,25 @@
-
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, APIRouter
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from models import *
 
 app = FastAPI()
 
 
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+templates = Jinja2Templates(directory="templates")
+
 manager = ConnectionManager()
 
 
-@app.websocket("/ws/{client_id}/{destination}")
+@app.get("/")
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@ app.websocket("/ws/{client_id}/{destination}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str, destination: str):
     user = UserConnection(websocket, client_id)
     await manager.connect(user)
