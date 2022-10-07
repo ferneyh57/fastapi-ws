@@ -18,13 +18,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, destination: 
                 if connection.nickname == destination:
                     while True:
                         data = await websocket.receive_text()
-                        await manager.send_personal_message(f" you say: {data}", user)
+                        await manager.send_personal_message(f" you say: {data} to:{user} ")
                         await manager.send_personal_message(f" {client_id} say to you: {data}", connection)
-
-    except WebSocketDisconnect:
-        manager.disconnect(user)
-        await manager.broadcast(f"{client_id} left the chat")
-    try:
         while True:
             data = await websocket.receive_text()
             await manager.broadcast(f"{client_id} says: {data}")
