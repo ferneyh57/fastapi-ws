@@ -14,8 +14,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str, destination: 
     user = UserConnection(websocket, client_id)
     await manager.connect(user)
 
-    for connection in manager.active_connections:
-        await manager.broadcast(f" {connection.nickname} esta en linea ")
     try:
         if destination != client_id:
             for connection in manager.active_connections:

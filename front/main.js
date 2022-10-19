@@ -26,9 +26,12 @@ const input = document.getElementById("destinationId");
 input.addEventListener("change", updateValue);
 function updateValue(e) {
     destination = e.target.value;
+
     if (destination !== "") {
-        ws.url = `ws://localhost:8000/ws/${client_id}/${destination}`;
+
+        ws = new WebSocket(`ws://localhost:8000/ws/${client_id}/${destination}`)
+
     } else {
-        ws.url = base_url;
+        ws = new WebSocket(base_url);
     }
 }
