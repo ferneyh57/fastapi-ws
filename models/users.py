@@ -15,4 +15,5 @@ class Users(models.Model):
 
 
 User_Pydantic = pydantic_model_creator(Users, name="User")
-UserIn_Pydantic = pydantic_model_creator(Users, name="UserIn")
+UserIn_Pydantic = pydantic_model_creator(
+    Users, name="UserIn")
