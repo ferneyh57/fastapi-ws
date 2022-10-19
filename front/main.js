@@ -1,8 +1,9 @@
-base_url = `ws://localhost:8000/ws/${client_id}/${client_id}`;
+
 client_id = localStorage.getItem("client_id");
 if (client_id == null) {
     client_id = Date.now().toString();
 }
+base_url = `ws://localhost:8000/ws/${client_id}/${client_id}`;
 document.querySelector("#ws-id").textContent = client_id;
 var ws = new WebSocket(base_url);
 
