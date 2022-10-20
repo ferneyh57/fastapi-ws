@@ -56,20 +56,42 @@ def login(request: Request):
 
 @ app.websocket("/ws/{client_id}/{destination}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str, destination: str):
-    user = UserConnection(websocket, client_id)
-    await manager.connect(user)
-    try:
-        if destination != client_id:
-            for connection in manager.active_connections:
-                if connection.nickname == destination:
-                    while True:
-                        data = await websocket.receive_text()
-                        await manager.send_personal_message(f" you say: {data}", user)
-                        await manager.send_personal_message(f" {client_id} say to you: {data}", connection)
+    # user = UserConnection(websocket, client_id)
+    # await manager.connect(user)
+    # try:
+    #     if destination != client_id:
+    #         for connection in manager.active_connections:
+    #             if connection.nickname == destination:
+    #                 while True:
+    #                     data = await websocket.receive_text()
+    #                     await manager.send_personal_message(f" you say: {data}", user)
+    #                     await manager.send_personal_message(f" {client_id} say to you: {data}", connection)
+    # except WebSocketDisconnect:
+    #     manager.disconnect(user)
+    #     await manager.broadcast(f"{client_id} left the chat")
 
-    except WebSocketDisconnect:
-        manager.disconnect(user)
-        await manager.broadcast(f"{client_id} left the chat")
+    # Valida si el usuario ya esta conectado
+    if manager.is_user_connect(client_id):
+        # Se obtiene la conexion dentro de la lista de conexiones activas
+        user = manager.get_user_connection(client_id)
+        # Se optiene la conexion del destinatario
+        user_receiver = manager.get_user_connection(destination)
+        # Se le envia un mensaje al destinatario notificandole que quieren hablar con el
+        manager.send_personal_message(
+            f"{client_id} quiere hablar contigo", user_receiver)
+
+    else:
+        # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
+        user = UserConnection(websocket, client_id)
+        await manager.connect(user)
+
+        try:
+            # Se le notifica a los demas usuario que se unio alguien nnuevo a la sala de chat
+            await manager.broadcast(f"new: {client_id}")
+        except WebSocketDisconnect:
+            manager.disconnect(user)
+            await manager.broadcast(f"{client_id} left the chat")
+
     try:
         while True:
             data = await websocket.receive_text()

@@ -13,6 +13,7 @@
     <div class="d-flex overflow-hidden shadow  position-relative">
         <!-- Users box-->
         <div class=" px-0  position-relative">
+            <!-- Name NickName -->
             <div style="z-index: 100;"
                 class="d-flex justify-content-between position-absolute top-0 start-0 end-0 bg-gray px-4 py-2 bg-light shadow">
                 <p class="h5 mb-0 py-1">Recent</p>
@@ -171,15 +172,13 @@
                 </div>
             </form>
         </div>
-
-
-    </div>
     </div>
 
 
     <!-- JavaScript Bundle with Popper -->
     <script src="assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="assets/js/script.js" defer></script>
+    <script src="assets/js/sweetalert.min.js" crossorigin="anonymous"></script>
+    <script src="{{ url_for('assets', path='/js/script.js') }}" defer></script>
 </body>
 
 </html>
