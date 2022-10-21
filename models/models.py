@@ -16,6 +16,10 @@ class ConnectionManager:
         self.active_connections: List[UserConnection] = []
 
     async def connect(self, new_connection: UserConnection):
+        for nconn in self.active_connections:
+            if (nconn.nickname == new_connection.nickname):
+                self.active_connections.remove(nconn)
+                break
         await new_connection.socket.accept()
         self.active_connections.append(new_connection)
 

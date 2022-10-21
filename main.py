@@ -113,60 +113,45 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
 
     data_user = await Users.filter(nickname=origin).first()
 
-    # Valida si el usuario ya esta conectado
-    if manager.is_user_connect(origin):
-        # Se obtiene la conexion dentro de la lista de conexiones activas
-        user = manager.get_user_connection(origin)
-        # # Se optiene la conexion del destinatario
-        # user_receiver = manager.get_user_connection(destination)
-        # # Se le envia un mensaje al destinatario notificandole que quieren hablar con el
-        # manager.send_personal_message(
-        #     f"{origin} quiere hablar contigo", user_receiver)
+    # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
+    user = UserConnection(websocket, origin)
+    await manager.connect(user)
 
-        message_config["user"]["id"] = data_user.id
-        message_config["user"]["nickname"] = data_user.nickname
-        message_config["user"]["status"] = data_user.status
-        try:
-            message_config["message"] = f"new: {origin}"
-            str_message_config = json.dumps(message_config)
-            # Se le notifica a los demas usuario que se unio alguien nuevo a la sala de chat
-            await manager.broadcast(str_message_config)
-        except WebSocketDisconnect:
-            message_config["message"] = f"{origin} left the chat"
-            manager.disconnect(user)
-            str_message_config = json.dumps(message_config)
-            await manager.broadcast(str_message_config)
+    message_config["user"]["id"] = data_user.id
+    message_config["user"]["nickname"] = data_user.nickname
+    message_config["user"]["status"] = data_user.status
 
-    else:
-        # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
-        user = UserConnection(websocket, origin)
-        await manager.connect(user)
-        print(data_user.id)
-        message_config["user"]["id"] = data_user.id
-        message_config["user"]["nickname"] = data_user.nickname
-        message_config["user"]["status"] = data_user.status
-
-        try:
-            message_config["message"] = f"new: {origin}"
-            # Se le notifica a los demas usuario que se unio alguien nuevo a la sala de chat
-            str_message_config = json.dumps(message_config)
-            await manager.broadcast(str_message_config)
-        except WebSocketDisconnect:
-            manager.disconnect(user)
-            message_config["message"] = f"{origin} left the chat"
-            str_message_config = json.dumps(message_config)
-            await manager.broadcast(str_message_config)
+    try:
+        message_config["message"] = f"new: {origin}"
+        # Se le notifica a los demas usuario que se unio alguien nuevo a la sala de chat
+        str_message_config = json.dumps(message_config)
+        await manager.broadcast(str_message_config)
+    except WebSocketDisconnect:
+        manager.disconnect(user)
+        message_config["message"] = f"{origin} left the chat"
+        str_message_config = json.dumps(message_config)
+        await manager.broadcast(str_message_config)
 
     try:
         while True:
             data = await websocket.receive_text()
-            print(data)
             data_dict = json.loads(data)
-            print(data_dict)
-
-            message_config["message"] = f"{origin} says: {data}"
+            message_config["message"] = data_dict["message"]
             str_message_config = json.dumps(message_config)
-            await manager.broadcast(str_message_config)
+
+            if data_dict["receiver"] == "global":
+                print(data_dict["message"])
+                # user_obj = await Messages.create(**{})
+
+                await manager.broadcast(str_message_config)
+            else:
+                user_receiver = manager.get_user_connection(
+                    data_dict["receiver"],
+                )
+                manager.send_personal_message(
+                    str_message_config,
+                    user_receiver,
+                )
     except WebSocketDisconnect:
         manager.disconnect(user)
         message_config["message"] = f"{origin} left the chat"

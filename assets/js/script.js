@@ -195,7 +195,10 @@ async function getChatPersonal(id_sender, id_receiver) {
 
 async function builPersonalChat(id_sender, id_receiver) {
   let chat_personal = await getChatPersonal(id_sender, id_receiver)
-  console.log(chat_personal)
+  chat_personal.forEach(message => {
+
+    console.log(message)
+  });
 }
 
 
@@ -221,12 +224,14 @@ async function builPersonalChat(id_sender, id_receiver) {
     nickname = nicknameLocalStorage
     document.querySelector("#ws-id").textContent = nicknameLocalStorage
   }
-  console.log("Antes del ajax")
-  let users = await getUsers()
-  console.log(users)
-  let $list_users = document.getElementById("list-users")
-  $list_users.innerHTML = ""
+  message_config.user.id = id
+  message_config.user.nickname = nickname
+  message_config.user.status = true
 
+  let users = await getUsers()
+  let $list_users = document.getElementById("list-users")
+
+  $list_users.innerHTML = ""
   users.forEach(user => {
     $list_users.innerHTML += buildUser(user.nickname, "...", id, user.id)
   });
@@ -242,8 +247,8 @@ async function builPersonalChat(id_sender, id_receiver) {
 
   let websocket = new WebSocket(`ws://localhost:8000/ws/${nickname}`);
   websocket.onmessage = function (event) {
-    message_config
-    buildMessage(event.data)
+    let message_response = JSON.parse(event.data);
+    buildMessage(message_response.message)
   }
 
   setWs(websocket)
@@ -256,8 +261,9 @@ function setWs(websocket) {
 function sendMessage(event) {
   var input = document.getElementById("messageText")
   message_config.message = input.value
-  console.log(message_config)
-  ws.send(String(message_config))
+  let str_message_config = JSON.stringify(message_config)
+  console.log(str_message_config)
+  ws.send(str_message_config)
   input.value = ''
   event.preventDefault()
 }
