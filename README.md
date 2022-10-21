@@ -1,8 +1,6 @@
-# [fastapi-ws](https://github.com/ferneyh57/fastapi-ws/tree/daniel)
+# **fastapi-ws**
 
 Chatroom con websocket fastapi tortoise-orm.
-# [Repositorio](https://github.com/ferneyh57/fastapi-ws/tree/daniel)
-
 
 ## Clonacion de repositorio 
 
