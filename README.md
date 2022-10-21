@@ -1,6 +1,7 @@
-# fastapi-ws
+# [fastapi-ws](https://github.com/ferneyh57/fastapi-ws/tree/daniel)
 
-Chatroom con websocket fastapi
+Chatroom con websocket fastapi tortoise-orm.
+# [Repositorio](https://github.com/ferneyh57/fastapi-ws/tree/daniel)
 
 
 ## Clonacion de repositorio 
@@ -31,3 +32,12 @@ uvicorn main:app --reload
 ```
 localhost:8000 | 127.0.0.1:8000
 ```
+
+## USO
+Al ingresar al sitio, se debera loguearse con un usuario y contraseña cualquiera.
+
+Al lado lateral izquierdo de la aplicación salen los distintos chats disponibles.
+
+Por defecto el chat es el global.
+
+Al seleccionar un usuario se abre un chat con el.
