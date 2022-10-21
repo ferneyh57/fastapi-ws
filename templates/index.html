@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat</title>
+    <!-- CSS only -->
+    <link href="{{ url_for('assets', path='/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/borderless.min.css"
+        integrity="sha256-hn2sfHi+6EMwexUdVvHdDBlUPSFQZ7lfjXHiCBgKhXw=" crossorigin="anonymous">
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="d-flex overflow-hidden shadow  position-relative">
+        <!-- Users box-->
+        <div class=" px-0  position-relative">
+            <!-- Name NickName -->
+            <div style="z-index: 100;"
+                class="d-flex justify-content-between position-absolute top-0 start-0 end-0 bg-gray px-4 py-2 bg-light shadow">
+                <p class="h5 mb-0 py-1">Recent</p>
+                <h4>Your ID: <span id="ws-id"></span></h4>
+            </div>
+
+
+            <div class="messages-box bg-white">
+                <div id="list-users" class="list-group rounded-0">
+
+                    <a class="list-group-item list-group-item-action active text-white rounded-0">
+                        <div class="media">
+                            <div class="media-body ml-4">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="mb-0">Nadie</h6><small class="small font-weight-bold">25
+                                        Dec</small>
+                                </div>
+                                <p class="font-italic mb-0 text-small">Lorem ipsum dolor sit amet, consectetur
+                                    adipisicing elit, sed do eiusmod tempor incididunt ut labore.</p>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+        <!-- Chat Box-->
+        <div class="flex-grow-1 px-0 position-relative">
+            <div style="z-index: 100;"
+                class="d-flex justify-content-center position-absolute top-0 start-0 end-0 bg-gray px-4 py-2 bg-light shadow">
+                <h4 id="name-receiver">GLOBAL</h4>
+            </div>
+
+            <!-- Chat Messages-->
+            <div id="chat-box" class="chat-box bg-white px-4 py-7">
+                <!-- TODO Sender Message-->
+
+                <!-- Reciever Message-->
+                <div id="messages" class="media w-50 ml-auto mb-3">
+                </div>
+            </div>
+
+            <!-- Typing area -->
+            <form action="" onsubmit="sendMessage(event)" class="position-absolute bottom-0 start-0 end-0 bg-light">
+                <div class="input-group">
+                    <input type="text" placeholder="Type a message" aria-describedby="button-addon2"
+                        class="form-control rounded-0 border-0 py-3 bg-light" id="messageText" autocomplete="off">
+                    <div class="input-group-append">
+                        <button id="button-addon2" type="submit" class="btn btn-link"> <i
+                                class="fa fa-paper-plane"></i>0</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- JavaScript Bundle with Popper -->
+    <script src="assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="assets/js/sweetalert2.min.js" crossorigin="anonymous"></script>
+    <script src="assets/js/script.js" defer></script>
+</body>
+
+</html>
