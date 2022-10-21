@@ -9,7 +9,7 @@ class Users(models.Model):
 
     id = fields.IntField(pk=True)
     #: This is a username
-    nickname = fields.CharField(max_length=50, unique=True)
+    nickname = fields.CharField(max_length=50)
     password = fields.CharField(max_length=128)
     status = fields.BooleanField()
 

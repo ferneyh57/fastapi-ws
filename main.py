@@ -8,6 +8,9 @@ from tortoise.contrib.fastapi import HTTPNotFoundError, register_tortoise
 from models.users import User_Pydantic, UserIn_Pydantic, Users
 from models.messages import Message_Pydantic, MessageIn_Pydantic, Messages
 from models.models import UserConnection, ConnectionManager
+from tortoise.functions import Max
+from tortoise.expressions import Q
+import json
 
 
 app = FastAPI()
@@ -15,6 +18,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["POST, GET"],
     allow_headers=["*"],
 )
@@ -25,10 +29,19 @@ templates = Jinja2Templates(directory="templates")
 
 manager = ConnectionManager()
 
+# VIEWS
+
 
 @app.get("/")
 def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/login")
+def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+# HTTP GET REQUESTS
 
 
 @app.get("/users", response_model=List[User_Pydantic])
@@ -36,85 +49,134 @@ async def get_users():
     return await User_Pydantic.from_queryset(Users.all())
 
 
-@app.post("/login", response_model=UserIn_Pydantic)
+@app.get("/user/{origin}", response_model=List[User_Pydantic])
+async def get_user(origin: int):
+    return await User_Pydantic.from_queryset(Users.filter(id=origin))
+
+
+@app.get("/messages/{origin}/{destination}")
+async def get_users(origin: int, destination: int):
+    return await Message_Pydantic.from_queryset(Messages.filter(Q(id_sender=origin) and Q(id_receiver=destination)))
+
+
+@app.get("/global", response_model=List[Message_Pydantic])
+async def chat_global():
+    return await Message_Pydantic.from_queryset(Messages.filter(id_receiver=0))
+
+# HTTP POST REQUESTS
+
+
+@app.post("/register", response_model=UserIn_Pydantic)
 async def create_user(user: UserIn_Pydantic):
-    print(user)
-    # print(await User_Pydantic.from_queryset(Users.all()))
-    user_obj = await Users.create(**user.dict(exclude_unset=True))
-    # websocket = WebSocket
-    # user = UserConnection(websocket, user_obj.nickname)
-    # await manager.connect(user)
-    # await manager.broadcast("user:{}".format(user.nickname))
+    new_user = user.dict(exclude_unset=True)
+
+    registered_users = await Users.filter(nickname=new_user["nickname"])
+
+    print(len(registered_users))
+    if len(registered_users) > 0:
+        new_user.update({"status": True})
+        print("El usuario ya esta registrado")
+        return new_user
+
+    last_id = [{"id": 1}]
+
+    try:
+        last_id = await Users.annotate(max=Max("id")).group_by("id").values("id")
+        print("El ultimo id de usuarios es: {}".format(last_id[-1]["id"]))
+    except:
+        print("Error al realizar consulta a la base de datos")
+
+    new_user.update({"id": last_id[-1]["id"] + 1})
+    user_obj = await Users.create(**new_user)
 
     return await User_Pydantic.from_tortoise_orm(user_obj)
 
-
-@app.get("/login")
-def login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+# WEBSOCKET
 
 
-@ app.websocket("/ws/{client_id}/{destination}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str, destination: str):
-    # user = UserConnection(websocket, client_id)
-    # await manager.connect(user)
-    # try:
-    #     if destination != client_id:
-    #         for connection in manager.active_connections:
-    #             if connection.nickname == destination:
-    #                 while True:
-    #                     data = await websocket.receive_text()
-    #                     await manager.send_personal_message(f" you say: {data}", user)
-    #                     await manager.send_personal_message(f" {client_id} say to you: {data}", connection)
-    # except WebSocketDisconnect:
-    #     manager.disconnect(user)
-    #     await manager.broadcast(f"{client_id} left the chat")
+@app.websocket("/ws/{origin}")
+async def websocket_endpoint(websocket: WebSocket, origin: str):
+    message_config = {
+        # receptor del mensaje
+        "receiver": "global",
+
+        # Mensaje a enviar al receptor
+        "message": "...",
+
+        # Datos de usuario del emisor
+        "user": {
+            "id": 0,
+            "nickname": "...",
+            "status": "...",
+        }
+    }
+
+    data_user = await Users.filter(nickname=origin).first()
 
     # Valida si el usuario ya esta conectado
-    if manager.is_user_connect(client_id):
+    if manager.is_user_connect(origin):
         # Se obtiene la conexion dentro de la lista de conexiones activas
-        user = manager.get_user_connection(client_id)
-        # Se optiene la conexion del destinatario
-        user_receiver = manager.get_user_connection(destination)
-        # Se le envia un mensaje al destinatario notificandole que quieren hablar con el
-        manager.send_personal_message(
-            f"{client_id} quiere hablar contigo", user_receiver)
+        user = manager.get_user_connection(origin)
+        # # Se optiene la conexion del destinatario
+        # user_receiver = manager.get_user_connection(destination)
+        # # Se le envia un mensaje al destinatario notificandole que quieren hablar con el
+        # manager.send_personal_message(
+        #     f"{origin} quiere hablar contigo", user_receiver)
+
+        message_config["user"]["id"] = data_user.id
+        message_config["user"]["nickname"] = data_user.nickname
+        message_config["user"]["status"] = data_user.status
+        try:
+            message_config["message"] = f"new: {origin}"
+            str_message_config = json.dumps(message_config)
+            # Se le notifica a los demas usuario que se unio alguien nuevo a la sala de chat
+            await manager.broadcast(str_message_config)
+        except WebSocketDisconnect:
+            message_config["message"] = f"{origin} left the chat"
+            manager.disconnect(user)
+            str_message_config = json.dumps(message_config)
+            await manager.broadcast(str_message_config)
 
     else:
         # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
-        user = UserConnection(websocket, client_id)
+        user = UserConnection(websocket, origin)
         await manager.connect(user)
+        print(data_user.id)
+        message_config["user"]["id"] = data_user.id
+        message_config["user"]["nickname"] = data_user.nickname
+        message_config["user"]["status"] = data_user.status
 
         try:
-            # Se le notifica a los demas usuario que se unio alguien nnuevo a la sala de chat
-            await manager.broadcast(f"new: {client_id}")
+            message_config["message"] = f"new: {origin}"
+            # Se le notifica a los demas usuario que se unio alguien nuevo a la sala de chat
+            str_message_config = json.dumps(message_config)
+            await manager.broadcast(str_message_config)
         except WebSocketDisconnect:
             manager.disconnect(user)
-            await manager.broadcast(f"{client_id} left the chat")
+            message_config["message"] = f"{origin} left the chat"
+            str_message_config = json.dumps(message_config)
+            await manager.broadcast(str_message_config)
 
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(f"{client_id} says: {data}")
+            print(data)
+            data_dict = json.loads(data)
+            print(data_dict)
+
+            message_config["message"] = f"{origin} says: {data}"
+            str_message_config = json.dumps(message_config)
+            await manager.broadcast(str_message_config)
     except WebSocketDisconnect:
         manager.disconnect(user)
-        await manager.broadcast(f"{client_id} left the chat")
+        message_config["message"] = f"{origin} left the chat"
+        str_message_config = json.dumps(message_config)
+        await manager.broadcast(str_message_config)
 
+# CONFIG DB
 db_config = {
     'connections': {
-        # Dict format for connection
-        'default': {
-            'engine': 'tortoise.backends.asyncpg',
-            'credentials': {
-                'host': 'db.bit.io',
-                'port': '5432',
-                'user': 'contruto',
-                'password': 'v2_3ur6z_nDEFhrNUVbT5PG6SEEB2ewn',
-                'database': 'contrutos/db-contruto',
-            }
-        },
-        # Using a DB_URL string
-        # 'default': 'postgresql://contruto:v2_3ur6z_nDEFhrNUVbT5PG6SEEB2ewn@db.bit.io/contrutos/db-contruto'
+        'default': 'sqlite://chatsito.sqlite3',
     },
     'apps': {
         'models': {
@@ -125,6 +187,7 @@ db_config = {
     }
 }
 
+# BUILD DATA BASE
 register_tortoise(
     app,
     modules={"models": ["models"]},

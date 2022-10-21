@@ -5,6 +5,8 @@
     <title>Chat</title>
     <!-- CSS only -->
     <link href="{{ url_for('assets', path='/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/borderless.min.css"
+        integrity="sha256-hn2sfHi+6EMwexUdVvHdDBlUPSFQZ7lfjXHiCBgKhXw=" crossorigin="anonymous">
     <link href="assets/css/style.css" rel="stylesheet">
 </head>
 
@@ -22,121 +24,17 @@
 
 
             <div class="messages-box bg-white">
-                <div class="list-group rounded-0">
+                <div id="list-users" class="list-group rounded-0">
+
                     <a class="list-group-item list-group-item-action active text-white rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
+                        <div class="media">
                             <div class="media-body ml-4">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">25
+                                    <h6 class="mb-0">Nadie</h6><small class="small font-weight-bold">25
                                         Dec</small>
                                 </div>
                                 <p class="font-italic mb-0 text-small">Lorem ipsum dolor sit amet, consectetur
                                     adipisicing elit, sed do eiusmod tempor incididunt ut labore.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">14
-                                        Dec</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">Lorem ipsum dolor sit amet,
-                                    consectetur. incididunt ut labore.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">9
-                                        Nov</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">consectetur adipisicing elit,
-                                    sed
-                                    do eiusmod tempor incididunt ut labore.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">18
-                                        Oct</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">Lorem ipsum dolor sit amet,
-                                    consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.
-                                </p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">17
-                                        Oct</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">consectetur adipisicing elit,
-                                    sed
-                                    do eiusmod tempor incididunt ut labore.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">2
-                                        Sep</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">Quis nostrud exercitation
-                                    ullamco
-                                    laboris nisi ut aliquip ex ea commodo consequat.</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">30
-                                        Aug</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">Lorem ipsum dolor sit amet,
-                                    consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.
-                                </p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                        <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                width="50" class="rounded-circle">
-                            <div class="media-body ml-4">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">21
-                                        Aug</small>
-                                </div>
-                                <p class="font-italic text-muted mb-0 text-small">Lorem ipsum dolor sit amet,
-                                    consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore.
-                                </p>
                             </div>
                         </div>
                     </a>
@@ -177,7 +75,7 @@
 
     <!-- JavaScript Bundle with Popper -->
     <script src="assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="assets/js/sweetalert.min.js" crossorigin="anonymous"></script>
+    <script src="assets/js/sweetalert2.all.min.js" crossorigin="anonymous"></script>
     <script src="{{ url_for('assets', path='/js/script.js') }}" defer></script>
 </body>
 
