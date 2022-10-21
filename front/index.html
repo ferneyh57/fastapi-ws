@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat</title>
+</head>
+
+<body onload="setUserId()">
+    <script>
+        function setUserId() {
+            let client_id = prompt("Ingresa tu nombre", "guess");
+            if (client_id == null) {
+                client_id = Date.now().toString();
+            }
+            localStorage.setItem(key = "client_id", value = client_id)
+            window.location.href = 'https://cotecnova-ws.netlify.app/chat.html';
+        }
+    </script>
+</body>
+
+</html>
