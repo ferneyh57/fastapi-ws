@@ -217,7 +217,7 @@ const scrollChatToDown = (id = "chat-box") => {
     id = login.id
     nickname = login.nickname
 
-    await Swal.fire({
+    Swal.fire({
       title: `Bienvenido ${nickname}`,
     })
 

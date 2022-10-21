@@ -108,6 +108,7 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
         # Mensaje a enviar al receptor
         "message": "...",
 
+        # Fecha creacion del mensaje
         "date": 0,
 
         # Datos de usuario del emisor
@@ -137,11 +138,11 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
         str_message_config = json.dumps(message_config)
         await manager.broadcast(str_message_config)
     except WebSocketDisconnect:
-        manager.disconnect(user)
         await data_user.update_from_dict({"status": False})
         message_config["user"]["status"] = False
         message_config["message"] = f"{origin} left the chat"
         str_message_config = json.dumps(message_config)
+        manager.disconnect(user)
         await manager.broadcast(str_message_config)
 
     try:
@@ -179,11 +180,11 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
                     print("El usuario destino, no esta conectado")
 
     except WebSocketDisconnect:
-        manager.disconnect(user)
         await data_user.update_from_dict({"status": False})
         message_config["user"]["status"] = False
         message_config["message"] = f"{origin} left the chat"
         str_message_config = json.dumps(message_config)
+        manager.disconnect(user)
         await manager.broadcast(str_message_config)
 
 
