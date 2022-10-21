@@ -91,57 +91,30 @@ async function showAuthDialog() {
 
 }
 
-function buildMessage(message) {
-  //// MENSAJES GLOBALES
-  /// Contenido html para los mensajes. 
-  /// En esta variable se obtiene la etiqueta html que muestra los mensajes.
-  let $contentForAllMessage = document.getElementById('messages')
-
-  /// MENSAJE A MOSTRAR
-  let $contentForMessages = document.createElement('div')
-  /// Contenido html para el mensaje a mostrar.
-  /// En esta variable se guardara la etiqueta <p>Aqui va el mensaje recibido</p>, 
-  let $contentForMessage = document.createElement('div')
-  /// Contenido html para el texto del mensaje a mostrar.
-  /// En esta se introduce el mensaje recibido.
-  let $contentForMesssageText = document.createElement('p')
-  /// Texto del mensaje recibido.
-  var contentText = document.createTextNode(message)
-
-  /// CREACION DE LA FECHA Y HORA EN LA QUE SE RECIBIO EL MENSAJE.
-  /// Contenido html para la fecha y hora en la que se recibe el mensaje.
-  let $contentForTimeText = document.createElement('p')
-  let currentDate = new Date();
+function buildMessage(message, sender = "", date) {
+  let currentDate = new Date(date * 1000);
+  console.log(date)
   /// Texto de la fecha actual con formato YYYY/MM/DD
   let cDate = currentDate.getFullYear() + '/' + (currentDate.getMonth() + 1) + '/' + currentDate.getDay()
   /// Texto de la hora actual con formato HH:MM
-  let contentTimeText = document.createTextNode(currentDate.getHours() + ":" + currentDate.getMinutes() + " | " + cDate)
+  let timeText = currentDate.getHours() + ":" + currentDate.getMinutes() + " | " + cDate
 
-  /// CREACION DE ESTILOS CSS CON BOTSTRAP
-  /// Asignacion de clases para el estilo del contenido del mensaje
-  $contentForMessages.classList.add("media-body")
-  $contentForMessage.classList.add("bg-light", "rounded", "py-2", "px-3", "mb-2")
-  /// Asignacion de clases para el estilo del contenido del texto del mensaje
-  $contentForMesssageText.classList.add("text-small", "mb-0", "text-muted")
-  /// Asignacion de clases para el estilo del contenido de la fecha y hora
-  $contentForTimeText.classList.add("small", "text-muted")
-
-  /// AGREGACION DEL MENSAJE RECIBIDO DENTRO DE LOS MENSAJES
-  $contentForMesssageText.appendChild(contentText)
-  $contentForMessage.appendChild($contentForMesssageText)
-  $contentForTimeText.appendChild(contentTimeText)
-  $contentForMessages.appendChild($contentForMessage)
-  $contentForMessages.appendChild($contentForTimeText)
-  $contentForAllMessage.appendChild($contentForMessages)
+  return `<div class="media-body">
+    <div class="bg-light rounded py-2 px-3 mb-2">
+      <p class="text-small mb-0 text-muted">${sender}: ${message}</p>
+    </div>
+    <p class="small text-muted">${timeText}</p>
+  </div>`
 }
 
-function buildUser(nickname, subtitle, id_sender, id_receiver) {
-  return `<a onclick="builPersonalChat(${id_sender}, ${id_receiver})" class="list-group-item list-group-item-action active text-white rounded-0">
+function buildUser(subtitle, sender, receiver, status) {
+  receiver = sender == receiver ? "global" : receiver
+  return `<a onclick="builPersonalChat('${sender}', '${receiver}')" class="list-group-item list-group-item-action active text-white rounded-0">
     <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
       width="50" class="rounded-circle">
       <div class="media-body ml-4">
         <div class="d-flex align-items-center justify-content-between mb-1">
-          <h6 class="mb-0">${nickname}</h6><small id="${nickname}-status" class="small font-weight-bold">online</small>
+          <h6 class="mb-0">${receiver}</h6><small id="${receiver}-status" class="small font-weight-bold">${status}</small>
         </div>
         <p class="font-italic mb-0 text-small">${subtitle}</p>
       </div>
@@ -182,10 +155,10 @@ async function getChatGlobal() {
   return chat_global
 }
 
-async function getChatPersonal(id_sender, id_receiver) {
+async function getChatPersonal(sender, receiver) {
   var chat_personal
   await ajax({
-    url: `${MESSAGES}/${id_sender}/${id_receiver}`,
+    url: `${MESSAGES}/${sender}/${receiver}`,
     cbSuccess: async (reponse_chat_global) => {
       chat_personal = reponse_chat_global
     }
@@ -193,14 +166,45 @@ async function getChatPersonal(id_sender, id_receiver) {
   return chat_personal
 }
 
-async function builPersonalChat(id_sender, id_receiver) {
-  let chat_personal = await getChatPersonal(id_sender, id_receiver)
-  chat_personal.forEach(message => {
+async function buildMessageList(sender = "", receiver = "") {
+  let chat_list
+  if (sender == "" || receiver == "") {
+    console.log("Mensajes globales")
+    chat_list = await getChatGlobal()
+  } else {
+    console.log(`Mensajes con ${receiver}`)
+    chat_list = await getChatPersonal(sender, receiver)
+  }
+  let $chat_messages = document.getElementById("messages")
+  $chat_messages.innerHTML = ""
+  chat_list.forEach(message => {
+    console.log(message.message)
+    $chat_messages.innerHTML += buildMessage(message.message, message.sender, message.date)
+  });
 
-    console.log(message)
+}
+async function builPersonalChat(sender, receiver) {
+  document.getElementById("name-receiver").textContent = receiver
+  message_config.receiver = receiver;
+  buildMessageList(sender, receiver)
+  scrollChatToDown()
+}
+
+
+async function buildListUsers(nickname) {
+  let users = await getUsers()
+  let $list_users = document.getElementById("list-users")
+
+  $list_users.innerHTML = ""
+  users.forEach(user => {
+    $list_users.innerHTML += buildUser("...", nickname, user.nickname, user.status)
   });
 }
 
+const scrollChatToDown = (id = "chat-box") => {
+  const element = document.getElementById(id);
+  element.scrollTop = element.scrollHeight;
+}
 
 (async function () {
   let nicknameLocalStorage = localStorage.getItem("nickname")
@@ -218,6 +222,7 @@ async function builPersonalChat(id_sender, id_receiver) {
     })
 
     localStorage.setItem("nickname", nickname)
+    localStorage.setItem("id", id)
     document.querySelector("#ws-id").textContent = nickname
   } else {
     id = idLocalStorage
@@ -228,27 +233,17 @@ async function builPersonalChat(id_sender, id_receiver) {
   message_config.user.nickname = nickname
   message_config.user.status = true
 
-  let users = await getUsers()
-  let $list_users = document.getElementById("list-users")
+  await buildListUsers(nickname)
 
-  $list_users.innerHTML = ""
-  users.forEach(user => {
-    $list_users.innerHTML += buildUser(user.nickname, "...", id, user.id)
-  });
-
-  let chat_global = await getChatGlobal()
-  let $messages = document.getElementById("messages")
-  chat_global.forEach(message => {
-    $messages.innerHTML += buildMessage(message.message)
-  });
-
-  console.log(chat_global)
-  console.log("Despues del ajax")
-
+  await buildMessageList()
+  scrollChatToDown()
   let websocket = new WebSocket(`ws://localhost:8000/ws/${nickname}`);
+
   websocket.onmessage = function (event) {
+    let $chat_messages = document.getElementById("messages")
     let message_response = JSON.parse(event.data);
-    buildMessage(message_response.message)
+    $chat_messages.innerHTML += buildMessage(message_response.message, nickname, message_response.date)
+    scrollChatToDown()
   }
 
   setWs(websocket)

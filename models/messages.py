@@ -1,5 +1,5 @@
 from tortoise import fields, models
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic.creator import pydantic_model_creator
 
 
 class Messages(models.Model):
@@ -10,8 +10,8 @@ class Messages(models.Model):
     id = fields.IntField(pk=True)
     #: This is a username
     message = fields.CharField(max_length=500)
-    id_sender = fields.IntField()
-    id_receiver = fields.IntField()
+    sender = fields.CharField(max_length=240)
+    receiver = fields.CharField(max_length=240)
     date = fields.IntField()
 
 

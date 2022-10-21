@@ -10,7 +10,11 @@ from models.messages import Message_Pydantic, MessageIn_Pydantic, Messages
 from models.models import UserConnection, ConnectionManager
 from tortoise.functions import Max
 from tortoise.expressions import Q
+from datetime import datetime
+
 import json
+import time
+import calendar
 
 
 app = FastAPI()
@@ -50,18 +54,18 @@ async def get_users():
 
 
 @app.get("/user/{origin}", response_model=List[User_Pydantic])
-async def get_user(origin: int):
-    return await User_Pydantic.from_queryset(Users.filter(id=origin))
+async def get_user(origin: str):
+    return await User_Pydantic.from_queryset(Users.filter(nickname=origin))
 
 
 @app.get("/messages/{origin}/{destination}")
-async def get_users(origin: int, destination: int):
-    return await Message_Pydantic.from_queryset(Messages.filter(Q(id_sender=origin) and Q(id_receiver=destination)))
+async def get_messages(origin: str, destination: str):
+    return await Message_Pydantic.from_queryset(Messages.filter(Q(sender=origin) and Q(receiver=destination)))
 
 
 @app.get("/global", response_model=List[Message_Pydantic])
 async def chat_global():
-    return await Message_Pydantic.from_queryset(Messages.filter(id_receiver=0))
+    return await Message_Pydantic.from_queryset(Messages.filter(receiver="global"))
 
 # HTTP POST REQUESTS
 
@@ -83,10 +87,11 @@ async def create_user(user: UserIn_Pydantic):
     try:
         last_id = await Users.annotate(max=Max("id")).group_by("id").values("id")
         print("El ultimo id de usuarios es: {}".format(last_id[-1]["id"]))
+        new_user.update({"id": last_id[-1]["id"] + 1})
     except:
+        new_user.update({"id": 1})
         print("Error al realizar consulta a la base de datos")
 
-    new_user.update({"id": last_id[-1]["id"] + 1})
     user_obj = await Users.create(**new_user)
 
     return await User_Pydantic.from_tortoise_orm(user_obj)
@@ -103,6 +108,8 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
         # Mensaje a enviar al receptor
         "message": "...",
 
+        "date": 0,
+
         # Datos de usuario del emisor
         "user": {
             "id": 0,
@@ -115,11 +122,14 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
 
     # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
     user = UserConnection(websocket, origin)
+
+    time_stamp = datetime.now().timestamp()
     await manager.connect(user)
 
     message_config["user"]["id"] = data_user.id
     message_config["user"]["nickname"] = data_user.nickname
     message_config["user"]["status"] = data_user.status
+    message_config["date"] = time_stamp
 
     try:
         message_config["message"] = f"new: {origin}"
@@ -128,6 +138,8 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
         await manager.broadcast(str_message_config)
     except WebSocketDisconnect:
         manager.disconnect(user)
+        await data_user.update_from_dict({"status": False})
+        message_config["user"]["status"] = False
         message_config["message"] = f"{origin} left the chat"
         str_message_config = json.dumps(message_config)
         await manager.broadcast(str_message_config)
@@ -139,24 +151,49 @@ async def websocket_endpoint(websocket: WebSocket, origin: str):
             message_config["message"] = data_dict["message"]
             str_message_config = json.dumps(message_config)
 
-            if data_dict["receiver"] == "global":
-                print(data_dict["message"])
-                # user_obj = await Messages.create(**{})
+            time_stamp = datetime.now().timestamp()
+            last_id = await the_last_id_messages()
+            new_message = {
+                "id": last_id+1,
+                "message": data_dict["message"],
+                "sender": origin,
+                "receiver": data_dict["receiver"],
+                "date": time_stamp
+            }
+            await Messages.create(**new_message)
 
+            if data_dict["receiver"] == "global":
                 await manager.broadcast(str_message_config)
             else:
-                user_receiver = manager.get_user_connection(
-                    data_dict["receiver"],
-                )
-                manager.send_personal_message(
-                    str_message_config,
-                    user_receiver,
-                )
+
+                # Si el usuario emisor no tiene conexion activa, entonces se crea una nueva
+                try:
+                    user_receiver = UserConnection(websocket, origin)
+
+                    await manager.connect(user_receiver)
+                    await manager.send_personal_message(
+                        str_message_config,
+                        user_receiver,
+                    )
+                except:
+                    print("El usuario destino, no esta conectado")
+
     except WebSocketDisconnect:
         manager.disconnect(user)
+        await data_user.update_from_dict({"status": False})
+        message_config["user"]["status"] = False
         message_config["message"] = f"{origin} left the chat"
         str_message_config = json.dumps(message_config)
         await manager.broadcast(str_message_config)
+
+
+async def the_last_id_messages():
+    try:
+        last_id = await Messages.annotate(max=Max("id")).group_by("id").values("id")
+        return last_id[-1]["id"]
+    except:
+        return 1
+
 
 # CONFIG DB
 db_config = {
